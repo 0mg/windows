@@ -1,4 +1,4 @@
 <dl>
-<dt>how to compile
-<dd>[gcc](http://gcc.gnu.org/) [-mwindows] *.c -o *.exe
+<dt>how to compile</dt>
+<dd><a href="http://gcc.gnu.org/">gcc</a> [-mwindows] *.c -o *.exe</dd>
 </dl>
