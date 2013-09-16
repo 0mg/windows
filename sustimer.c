@@ -1,3 +1,4 @@
+#define UNICODE
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
