@@ -16,15 +16,6 @@ void __start__() {
   ExitProcess(WinMain(GetModuleHandle(NULL), 0, "", 0));
 }
 
-void alert(LPCWSTR msg) {
-  MessageBox(NULL, msg, TEXT(""), MB_OK);
-}
-void ttl(HWND hwnd, int n) {
-  TCHAR s[64];
-  wsprintf(s, TEXT("%d"), n);
-  SetWindowText(hwnd, s);
-}
-
 struct {
   int atimeout;
 } gdata;
