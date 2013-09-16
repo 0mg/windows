@@ -11,6 +11,11 @@
 #define WTIMER_OUT 500
 #define ATIMEOUT_DEFAULT 60
 
+void __start__() {
+  // program will start from here if `gcc -nostartfiles`
+  ExitProcess(WinMain(GetModuleHandle(NULL), 0, "", 0));
+}
+
 void alert(LPCWSTR msg) {
   MessageBox(NULL, msg, TEXT(""), MB_OK);
 }
