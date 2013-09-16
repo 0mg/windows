@@ -173,9 +173,16 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   MSG msg;
   WNDCLASS wc;
+  LPWSTR cmdline;
+  LPWSTR *cmdarr;
+  int cmdlen;
 
   // タイムアウト(msec) 設定
-  gdata.atimeout = (isdigit(cl[0]) ? atoi(cl) : ATIMEOUT_DEFAULT) * 1000;
+  cmdline = GetCommandLineW();
+  cmdarr = CommandLineToArgvW(cmdline, &cmdlen);
+  gdata.atimeout = (
+    cmdarr[1] && iswdigit(cmdarr[1][0]) ? _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
+  ) * 1000;
 
   // メインウィンドウ 設定
   wc.style = CS_HREDRAW | CS_VREDRAW;
