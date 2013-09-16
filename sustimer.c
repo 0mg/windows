@@ -87,7 +87,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     SelectObject(hdc, counter.font);
     SetTextColor(hdc, RGB(255, 255, 255));
     Rectangle(hdc, canvas.left, canvas.top, canvas.right, canvas.bottom);
-    swprintf(counter.text, TEXT("%d"), atimer.fixed);
+    wsprintf(counter.text, TEXT("%d"), atimer.fixed);
     DrawText(hdc, counter.text, -1, &canvas,
       DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     if (hover) {
