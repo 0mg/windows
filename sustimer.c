@@ -16,10 +16,6 @@ void __start__() {
   ExitProcess(WinMain(GetModuleHandle(NULL), 0, "", 0));
 }
 
-struct {
-  int atimeout;
-} gdata;
-
 void suspendSystem() {
   HMODULE lib = LoadLibrary(TEXT("powrprof.dll"));
   FARPROC SetSuspendState = GetProcAddress(lib, "SetSuspendState");
@@ -40,8 +36,11 @@ void startMouseTrack(HWND hwnd) {
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   static BOOL hover;
+  LPWSTR *cmdarr;
+  int cmdlen;
 
   static struct {
+    int out;
     int rest;
     int fixed;
     int fixedPrev;
@@ -111,24 +110,29 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
   void quitApp(HWND hwnd) {
     DestroyWindow(hwnd);
-    freePainter();
     PostQuitMessage(0);
+    KillTimer(hwnd, WTIMER_ID);
+    freePainter();
   }
 
-  atimer.rest = gdata.atimeout - clock();
+  if (!atimer.out) {
+    cmdarr = CommandLineToArgvW(GetCommandLineW(), &cmdlen);
+    atimer.out = (
+      cmdarr[1] && iswdigit(cmdarr[1][0]) ? _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
+    ) * 1000;
+  }
+
+  atimer.rest = atimer.out - clock();
   atimer.fixed = atimer.rest / 1000 + 1;
 
   if (atimer.over) {
     quitApp(hwnd);
   } else if (atimer.rest <= 0) {
     atimer.over = TRUE;
-    KillTimer(hwnd, WTIMER_ID);
     quitApp(hwnd);
     onATimeout(hwnd);
     onATimeout = nop;
-  }
-
-  switch (msg) {
+  } else switch (msg) {
   case WM_CREATE:
     SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
     initPainter();
@@ -173,16 +177,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   MSG msg;
   WNDCLASS wc;
-  LPWSTR cmdline;
-  LPWSTR *cmdarr;
-  int cmdlen;
-
-  // タイムアウト(msec) 設定
-  cmdline = GetCommandLineW();
-  cmdarr = CommandLineToArgvW(cmdline, &cmdlen);
-  gdata.atimeout = (
-    cmdarr[1] && iswdigit(cmdarr[1][0]) ? _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
-  ) * 1000;
 
   // メインウィンドウ 設定
   wc.style = CS_HREDRAW | CS_VREDRAW;
