@@ -118,7 +118,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   if (!atimer.out) {
     cmdarr = CommandLineToArgvW(GetCommandLineW(), &cmdlen);
     atimer.out = (
-      cmdarr[1] && iswdigit(cmdarr[1][0]) ? _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
+      cmdlen >= 2 && iswdigit(cmdarr[1][0]) ?
+        _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
     ) * 1000;
   }
 
