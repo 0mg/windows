@@ -16,14 +16,14 @@ void __start__() {
   ExitProcess(WinMain(GetModuleHandle(NULL), 0, NULL, 0));
 }
 
+BOOL atimeover;
+
 void suspendSystem() {
   HMODULE lib = LoadLibrary(TEXT("powrprof.dll"));
   FARPROC SetSuspendState = GetProcAddress(lib, "SetSuspendState");
   SetSuspendState(FALSE, FALSE, FALSE);
   FreeLibrary(lib);
 }
-void nop() {}
-void (*onATimeout)() = suspendSystem;
 
 void startMouseTrack(HWND hwnd) {
   TRACKMOUSEEVENT tme;
@@ -139,8 +139,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
   if (atimer.rest <= 0) {
     quitApp();
-    onATimeout();
-    onATimeout = nop;
+    atimeover = TRUE;
   } else switch (msg) {
   case WM_CREATE:
     SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
@@ -223,5 +222,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
+  // Suspend if time over
+  if (atimeover) suspendSystem();
   return msg.wParam;
 }
