@@ -13,7 +13,7 @@
 
 void __start__() {
   // program will start from here if `gcc -nostartfiles`
-  ExitProcess(WinMain(GetModuleHandle(NULL), 0, NULL, 0));
+  ExitProcess(WinMain(GetModuleHandle(NULL), 0, "", 0));
 }
 
 BOOL atimeover;
@@ -34,6 +34,11 @@ void startMouseTrack(HWND hwnd) {
   TrackMouseEvent(&tme);
 }
 
+void quitApp(HWND hwnd) {
+  PostMessage(hwnd, WM_CLOSE, 0, 0);
+  PostQuitMessage(0);
+}
+
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   static BOOL hover;
   static RECT canvas;
@@ -46,28 +51,65 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     int fixedPrev;
   } atimer;
 
-  static struct Pens {
+  static struct {
     HFONT font;
     HPEN pen;
     LOGBRUSH logbrush;
     HBRUSH brush;
+    TCHAR text[8];
   } counter, closer, logo, progress, progbar;
 
-  void initPainter() {
+  if (!atimer.out) {
+    LPWSTR *cmdarr;
+    int cmdlen;
+    cmdarr = CommandLineToArgvW(GetCommandLineW(), &cmdlen);
+    atimer.out = (
+      cmdlen >= 2 && iswdigit(cmdarr[1][0]) ?
+        _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
+    ) * 1000;
+  }
+
+  atimer.rest = atimer.out - clock();
+  atimer.fixed = atimer.rest / 1000 + 1;
+
+  if (atimer.rest <= 0) {
+    quitApp(hwnd);
+    atimeover = TRUE;
+  } else switch (msg) {
+  case WM_CREATE:
+    SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
+    // init pens
     counter.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       DEFAULT_CHARSET, 0, 0, 0, 0, NULL);
     closer.pen = CreatePen(PS_SOLID, 10, TEXT_COLOR);
     logo.font = counter.font;
-    closer.brush = GetStockObject(NULL_BRUSH);
+    closer.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
     closer.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       SYMBOL_CHARSET, 0, 0, 0, 0, NULL);
     progress.pen = CreatePen(PS_SOLID, PRG_BORDER, TEXT_COLOR);
-    progress.brush = GetStockObject(NULL_BRUSH);
-    progbar.pen = GetStockObject(NULL_PEN);
-    progbar.brush = CreateSolidBrush(TEXT_COLOR);
-  }
-
-  void paintContent() {
+    progress.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    progbar.pen = (HPEN)GetStockObject(NULL_PEN);
+    progbar.brush = (HBRUSH)CreateSolidBrush(TEXT_COLOR);
+    // Set: client area
+    GetClientRect(hwnd, &canvas);
+    // Set: progressbar area
+    progvas.left = canvas.left + 20;
+    progvas.top = canvas.bottom - 40;
+    progvas.right = canvas.right - 20;
+    progvas.bottom = canvas.bottom - 20;
+    // repaint
+    InvalidateRect(hwnd, NULL, TRUE);
+    return 0;
+  case WM_TIMER:
+    // repaint
+    if (atimer.fixed != atimer.fixedPrev) {
+      InvalidateRect(hwnd, NULL, TRUE);
+      atimer.fixedPrev = atimer.fixed;
+    } else {
+      InvalidateRect(hwnd, &progvas, TRUE);
+    }
+    return 0;
+  case WM_PAINT: {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
     SetBkMode(hdc, TRANSPARENT);
@@ -78,9 +120,8 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
       DT_LEFT);
     // count down
     SelectObject(hdc, counter.font);
-    TCHAR cdtext[8];
-    wsprintf(cdtext, TEXT("%d"), atimer.fixed);
-    DrawText(hdc, cdtext, -1, &canvas,
+    wsprintf(counter.text, TEXT("%d"), atimer.fixed);
+    DrawText(hdc, counter.text, -1, &canvas,
       DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     // progress frame
     SelectObject(hdc, progress.pen);
@@ -108,59 +149,10 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
       DrawText(hdc, TEXT("x"), -1, &canvas, DT_RIGHT);
     }
     EndPaint(hwnd, &ps);
-  }
-
-  void repaint() {
-    if (atimer.fixed != atimer.fixedPrev) {
-      InvalidateRect(hwnd, NULL, TRUE);
-      atimer.fixedPrev = atimer.fixed;
-    } else {
-      InvalidateRect(hwnd, &progvas, TRUE);
-    }
-  }
-
-  void quitApp() {
-    PostMessage(hwnd, WM_CLOSE, 0, 0);
-    PostQuitMessage(0);
-  }
-
-  if (!atimer.out) {
-    LPWSTR *cmdarr;
-    int cmdlen;
-    cmdarr = CommandLineToArgvW(GetCommandLineW(), &cmdlen);
-    atimer.out = (
-      cmdlen >= 2 && iswdigit(cmdarr[1][0]) ?
-        _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
-    ) * 1000;
-  }
-
-  atimer.rest = atimer.out - clock();
-  atimer.fixed = atimer.rest / 1000 + 1;
-
-  if (atimer.rest <= 0) {
-    quitApp();
-    atimeover = TRUE;
-  } else switch (msg) {
-  case WM_CREATE:
-    SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
-    initPainter();
-    repaint();
-    // Set: client area
-    GetClientRect(hwnd, &canvas);
-    // Set: progressbar area
-    progvas.left = canvas.left + 20;
-    progvas.top = canvas.bottom - 40;
-    progvas.right = canvas.right - 20;
-    progvas.bottom = canvas.bottom - 20;
     return 0;
-  case WM_TIMER:
-    repaint();
-    return 0;
-  case WM_PAINT:
-    paintContent();
-    return 0;
+  }
   case WM_DESTROY:
-    quitApp();
+    quitApp(hwnd);
     return 0;
   case WM_MOUSELEAVE:
     hover = FALSE;
@@ -174,14 +166,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     return 0;
   case WM_LBUTTONUP:
-    quitApp();
+    quitApp(hwnd);
     return 0;
   case WM_CHAR:
     switch (wp) {
     case VK_ESCAPE:
     case VK_SPACE:
     case VK_RETURN:
-      quitApp();
+      quitApp(hwnd);
       break;
     }
     return 0;
@@ -190,21 +182,26 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
-  // Main Window: Settings
   WNDCLASS wc;
+  HWND hwnd;
+  MSG msg;
+
+  // Main Window: Settings
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = MainWindowProc;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = hi;
-  wc.hIcon = LoadImage(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED);
-  wc.hCursor = LoadImage(NULL, IDC_HAND, IMAGE_CURSOR, 0, 0, LR_SHARED);
+  wc.hIcon =
+    (HICON)LoadImage(NULL, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_SHARED);
+  wc.hCursor =
+    (HCURSOR)LoadImage(NULL, IDC_HAND, IMAGE_CURSOR, 0, 0, LR_SHARED);
   wc.hbrBackground = CreateSolidBrush(WND_BG);
   wc.lpszMenuName = NULL;
   wc.lpszClassName = TEXT("Suspend PC Timer Window Class");
 
   // Main Window: Create, Show
-  HWND hwnd = CreateWindowEx(
+  hwnd = CreateWindowEx(
     WS_EX_TOPMOST,
     (LPCTSTR)MAKELONG(RegisterClass(&wc), 0), TEXT("Suspend PC Timer"),
     WS_VISIBLE | WS_SYSMENU,
@@ -217,7 +214,6 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   if (hwnd == NULL) return 1;
 
   // While msg.message != WM_QUIT
-  MSG msg;
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
