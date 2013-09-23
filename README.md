@@ -21,3 +21,7 @@ gcc -mwindows *.c
 ## without compile
 
 * [EXE file archives](https://bitbucket.org/0mg/windows/downloads/)
+
+## another compile
+
+* Visual Studio: `cl *.c /MD`

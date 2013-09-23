@@ -2,6 +2,9 @@
 #include <ctype.h>
 #include <time.h>
 #include <windows.h>
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
 #define WND_WIDTH 320
 #define WND_HEIGHT 240
 #define WND_BG RGB(30, 90, 200)
