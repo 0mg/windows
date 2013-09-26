@@ -2,9 +2,26 @@
 #include <ctype.h>
 #include <time.h>
 #include <windows.h>
+/* #include <shobjidl.h>
+  gcc's shobjidl.h:
+    STDMETHOD(SetProgressValue)(THIS_ ULONGLONG,ULONGLONG) PURE;
+    > ..is incorrect definition
+  correct:
+    STDMETHOD(SetProgressValue)(THIS_ HWND,ULONGLONG,ULONGLONG) PURE;
+*/
+#undef INTERFACE
+#define INTERFACE ITaskbarList3
+DECLARE_INTERFACE(INTERFACE) {
+  void *qa[2];
+  STDMETHOD_(ULONG, Release)(THIS);
+  void *ha[6];
+  STDMETHOD(SetProgressValue)(THIS_ HWND, ULONGLONG, ULONGLONG);
+};
+#undef INTERFACE
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "ole32.lib")
 #define WND_WIDTH 320
 #define WND_HEIGHT 240
 #define WND_BG RGB(30, 90, 200)
@@ -35,6 +52,22 @@ void startMouseTrack(HWND hwnd) {
   tme.hwndTrack = hwnd;
   tme.dwHoverTime = 1;
   TrackMouseEvent(&tme);
+}
+
+void setTBProgress(HWND hwnd, int now, int max) {
+  ITaskbarList3* ppv;
+  CLSID tbclsid;
+  IID tbiid;
+  HRESULT result;
+  CLSIDFromString(OLESTR("{56FDF344-FD6D-11d0-958A-006097C9A090}"), &tbclsid);
+  IIDFromString(OLESTR("{EA1AFB91-9E28-4B86-90E9-9E9F8A5EEFAF}"), &tbiid);
+  CoInitialize(NULL);
+  result = CoCreateInstance(&tbclsid, NULL, CLSCTX_ALL, &tbiid, (LPVOID *)&ppv);
+  if (result == S_OK) {
+    ppv->lpVtbl->SetProgressValue(ppv, hwnd, now, max);
+    ppv->lpVtbl->Release(ppv);
+  }
+  CoUninitialize();
 }
 
 void quitApp(HWND hwnd) {
@@ -152,6 +185,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
       DrawText(hdc, TEXT("x"), -1, &canvas, DT_RIGHT);
     }
     EndPaint(hwnd, &ps);
+    setTBProgress(hwnd, atimer.rest, atimer.out);
     return 0;
   }
   case WM_DESTROY:
