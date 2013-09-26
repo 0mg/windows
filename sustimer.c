@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <windows.h>
+#include <powrprof.h>
 /* #include <shobjidl.h>
   gcc's shobjidl.h:
     STDMETHOD(SetProgressValue)(THIS_ ULONGLONG,ULONGLONG) PURE;
@@ -22,6 +23,7 @@ DECLARE_INTERFACE(INTERFACE) {
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "powrprof.lib")
 #define WND_WIDTH 320
 #define WND_HEIGHT 240
 #define WND_BG RGB(30, 90, 200)
@@ -37,13 +39,6 @@ void __start__() {
 }
 
 BOOL atimeover;
-
-void suspendSystem() {
-  HMODULE lib = LoadLibrary(TEXT("powrprof.dll"));
-  FARPROC SetSuspendState = GetProcAddress(lib, "SetSuspendState");
-  SetSuspendState(FALSE, FALSE, FALSE);
-  FreeLibrary(lib);
-}
 
 void startMouseTrack(HWND hwnd) {
   TRACKMOUSEEVENT tme;
@@ -256,6 +251,6 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
     DispatchMessage(&msg);
   }
   // Suspend if time over
-  if (atimeover) suspendSystem();
+  if (atimeover) SetSuspendState(FALSE, FALSE, FALSE);
   return msg.wParam;
 }

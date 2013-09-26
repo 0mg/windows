@@ -3,14 +3,14 @@
 use [gcc](http://gcc.gnu.org/) on command line.
 
 ```
-gcc *.c
+gcc *.c -mwindows -lpowrprof -lole32
 ```
 
-add `-mwindows` option to make Windows GUI **(non-console)** application.
+### important options
 
-```
-gcc -mwindows *.c
-```
+* `-mwindows` to make Windows GUI **(non-console)** application.
+* `-l*` to link library
+  * -lpowrprof = link "libpowrprof.a" to use SetSuspendState(..).
 
 ### other options
 
