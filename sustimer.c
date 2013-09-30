@@ -65,6 +65,21 @@ void setTBProgress(HWND hwnd, int now, int max) {
   CoUninitialize();
 }
 
+int getATimeout() {
+  #define MS 1000
+  LPWSTR *args;
+  int len;
+  args = CommandLineToArgvW(GetCommandLineW(), &len);
+  if (len > 1) {
+    LPWSTR ts = args[1];
+    int tn = _wtoi(ts) * MS;
+    if (tn >= (ts[0] - L'0') * MS) {
+      return tn;
+    }
+  }
+  return ATIMEOUT_DEFAULT * MS;
+}
+
 void quitApp(HWND hwnd) {
   PostMessage(hwnd, WM_CLOSE, 0, 0);
   PostQuitMessage(0);
@@ -91,13 +106,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   } counter, closer, logo, progress, progbar;
 
   if (!atimer.out) {
-    LPWSTR *cmdarr;
-    int cmdlen;
-    cmdarr = CommandLineToArgvW(GetCommandLineW(), &cmdlen);
-    atimer.out = (
-      cmdlen >= 2 && iswdigit(cmdarr[1][0]) ?
-        _wtoi(cmdarr[1]) : ATIMEOUT_DEFAULT
-    ) * 1000;
+    atimer.out = getATimeout();
   }
 
   atimer.rest = atimer.out - clock();
