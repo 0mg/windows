@@ -109,7 +109,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     atimer.out = getATimeout();
   }
 
-  atimer.rest = atimer.out - clock();
+  atimer.rest = atimer.out - clock() - 1;
   atimer.fixed = atimer.rest / 1000 + 1;
 
   if (atimer.rest <= 0) {
