@@ -1,5 +1,5 @@
-CL = cl $*.c /Fe$@ /MD /Ox /GA
-DL = cl $*.c /Fe$@ /MD /LD /Ox /GA
+CL = cl $*.c /MD /link /ENTRY:__start__
+DL = cl $*.c /MD /LD
 CL_DEL = del $*.obj
 DL_DEL = del $*.obj $*.exp $*.lib
 
