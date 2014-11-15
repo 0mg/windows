@@ -24,4 +24,7 @@ gcc *.c -mwindows -lpowrprof -lole32
 
 ## another compile
 
-* Visual Studio: `cl *.c /MD`
+### Visual Studio
+
+* normal: `cl *.c /MD`
+* tiny: `cl *.c /MD /link /ENTRY:__start__`
