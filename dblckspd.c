@@ -8,7 +8,11 @@ void __start__() {
   ExitProcess(WinMain(0, 0, NULL, 0));
 }
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
-  int n, ms = _wtoi(CommandLineToArgvW(GetCommandLineW(), &n)[1]);
+  int len, ms;
+  LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &len);
+  if (len > 1) {
+    ms = _wtoi(args[1]);
+  }
   SystemParametersInfo(SPI_SETDOUBLECLICKTIME,
     ms ? ms : 200, NULL,
     SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
