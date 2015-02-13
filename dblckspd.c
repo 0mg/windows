@@ -8,7 +8,7 @@ void __start__() {
   ExitProcess(WinMain(0, 0, NULL, 0));
 }
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
-  int len, ms;
+  int len = 0, ms = 0;
   LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &len);
   if (len > 1) {
     ms = _wtoi(args[1]);
