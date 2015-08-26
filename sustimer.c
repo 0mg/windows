@@ -30,6 +30,7 @@ DECLARE_INTERFACE(INTERFACE) {
 #define WND_BG RGB(30, 90, 200)
 #define TEXT_COLOR RGB(255, 255, 255)
 #define PRG_BORDER 2
+#define CLS_BORDER 10
 #define WTIMER_ID 0
 #define WTIMER_OUT 500
 #define ATIMEOUT_DEFAULT 60
@@ -119,16 +120,20 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   } else switch (msg) {
   case WM_CREATE:
     SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
-    // init pens
+    // counter
     counter.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       DEFAULT_CHARSET, 0, 0, 0, 0, NULL);
-    closer.pen = CreatePen(PS_SOLID, 10, TEXT_COLOR);
-    logo.font = counter.font;
+    // closer
+    closer.pen = CreatePen(PS_SOLID, CLS_BORDER, TEXT_COLOR);
     closer.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
     closer.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       SYMBOL_CHARSET, 0, 0, 0, 0, NULL);
+    // logo
+    logo.font = counter.font;
+    // progress frame
     progress.pen = CreatePen(PS_SOLID, PRG_BORDER, TEXT_COLOR);
     progress.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    // progress bar
     progbar.pen = (HPEN)GetStockObject(NULL_PEN);
     progbar.brush = (HBRUSH)CreateSolidBrush(TEXT_COLOR);
     // Set: client area
@@ -256,7 +261,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   if (hwnd == NULL) return 1;
 
   // While msg.message != WM_QUIT
-  while (GetMessage(&msg, NULL, 0, 0)) {
+  while (GetMessage(&msg, NULL, 0, 0) > 0) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
