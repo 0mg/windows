@@ -1,0 +1,27 @@
+CL = cl $*.c /MD /link /ENTRY:__start__
+DL = cl $*.c /MD /LD
+CL_DEL = del $*.obj
+DL_DEL = del $*.obj $*.exp $*.lib
+
+.PHONY: all
+all: dblckspd.exe dispoff.exe suspend.exe sustimer.exe powrprof.dll
+
+dblckspd.exe:
+	$(CL)
+	$(CL_DEL)
+
+dispoff.exe:
+	$(CL)
+	$(CL_DEL)
+
+suspend.exe:
+	$(CL)
+	$(CL_DEL)
+
+sustimer.exe:
+	$(CL)
+	$(CL_DEL)
+
+powrprof.dll:
+	$(DL)
+	$(DL_DEL)

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <windows.h>
 #include <powrprof.h>
+#include <mmsystem.h>
 /* #include <shobjidl.h>
   gcc's shobjidl.h:
     STDMETHOD(SetProgressValue)(THIS_ ULONGLONG,ULONGLONG) PURE;
@@ -24,14 +25,17 @@ DECLARE_INTERFACE(INTERFACE) {
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "powrprof.lib")
+#define MS 1000
 #define WND_WIDTH 320
 #define WND_HEIGHT 240
 #define WND_BG RGB(30, 90, 200)
 #define TEXT_COLOR RGB(255, 255, 255)
 #define PRG_BORDER 2
+#define CLS_BORDER 10
 #define WTIMER_ID 0
-#define WTIMER_OUT 500
+#define WTIMER_OUT 100
 #define ATIMEOUT_DEFAULT 60
 
 void __start__() {
@@ -67,15 +71,16 @@ void setTBProgress(HWND hwnd, int now, int max) {
 }
 
 int getATimeout() {
-  #define MS 1000
-  LPWSTR *args;
-  int len;
-  args = CommandLineToArgvW(GetCommandLineW(), &len);
-  if (len > 1) {
+  int argc;
+  LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (argc > 1) {
     LPWSTR ts = args[1];
-    int tn = _wtoi(ts) * MS;
-    if (tn >= (ts[0] - L'0') * MS) {
-      return tn;
+    if (ts[0] >= '0' && ts[0] <= '9') {
+      int tn = 0;
+      while (*ts) {
+        tn = (tn * 10) + (*ts++ - '0');
+      }
+      return tn * MS;
     }
   }
   return ATIMEOUT_DEFAULT * MS;
@@ -106,11 +111,16 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     TCHAR text[8];
   } counter, closer, logo, progress, progbar;
 
+  static DWORD stime = 0;
+
   if (!atimer.out) {
     atimer.out = getATimeout();
   }
+  if (!stime) {
+    stime = timeGetTime();
+  }
 
-  atimer.rest = atimer.out - clock() - 1;
+  atimer.rest = atimer.out - (timeGetTime() - stime) - 1;
   atimer.fixed = atimer.rest / 1000 + 1;
 
   if (atimer.rest <= 0) {
@@ -118,17 +128,22 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     atimeover = TRUE;
   } else switch (msg) {
   case WM_CREATE:
+    // window timer
     SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
-    // init pens
+    // counter
     counter.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       DEFAULT_CHARSET, 0, 0, 0, 0, NULL);
-    closer.pen = CreatePen(PS_SOLID, 10, TEXT_COLOR);
-    logo.font = counter.font;
+    // closer
+    closer.pen = CreatePen(PS_SOLID, CLS_BORDER, TEXT_COLOR);
     closer.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
     closer.font = CreateFont(90, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0,
       SYMBOL_CHARSET, 0, 0, 0, 0, NULL);
+    // logo
+    logo.font = counter.font;
+    // progress frame
     progress.pen = CreatePen(PS_SOLID, PRG_BORDER, TEXT_COLOR);
     progress.brush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    // progress bar
     progbar.pen = (HPEN)GetStockObject(NULL_PEN);
     progbar.brush = (HBRUSH)CreateSolidBrush(TEXT_COLOR);
     // Set: client area
@@ -256,7 +271,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   if (hwnd == NULL) return 1;
 
   // While msg.message != WM_QUIT
-  while (GetMessage(&msg, NULL, 0, 0)) {
+  while (GetMessage(&msg, NULL, 0, 0) > 0) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
