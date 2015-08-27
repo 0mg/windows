@@ -1,4 +1,4 @@
-CL = gcc $(@:.exe=.c) -o $@ -mwindows -s -nostartfiles -lole32 -lpowrprof
+CL = gcc $(@:.exe=.c) -o $@ -mwindows -s -nostartfiles -lole32 -lpowrprof -lwinmm
 DL = gcc $(@:.dll=.c) -o $@ -shared -s
 
 .PHONY: all
