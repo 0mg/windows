@@ -3,7 +3,7 @@
 use [gcc](http://gcc.gnu.org/) on command line.
 
 ```
-gcc *.c -mwindows -lpowrprof -lole32
+gcc *.c -mwindows -lpowrprof -lole32 -lwinmm
 ```
 
 ### important options
@@ -20,7 +20,8 @@ gcc *.c -mwindows -lpowrprof -lole32
 
 ## without compile
 
-* [EXE file archives](https://bitbucket.org/0mg/windows/downloads/)
+* [Released EXEs](https://github.com/0mg/windows/releases)
+* [EXE old archives](https://bitbucket.org/0mg/windows/downloads/)
 
 ## another compile
 
