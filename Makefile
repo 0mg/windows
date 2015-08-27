@@ -14,4 +14,4 @@ suspend.exe:
 	$(CL) -lpowrprof
 
 sustimer.exe:
-	$(CL) -lole32 -lpowrprof
+	$(CL) -lole32 -lpowrprof -lwinmm
