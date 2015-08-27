@@ -1,9 +1,6 @@
 #define UNICODE
-#include <ctype.h>
-#include <time.h>
 #include <windows.h>
 #include <powrprof.h>
-#include <mmsystem.h>
 /* #include <shobjidl.h>
   gcc's shobjidl.h:
     STDMETHOD(SetProgressValue)(THIS_ ULONGLONG,ULONGLONG) PURE;
@@ -25,7 +22,6 @@ DECLARE_INTERFACE(INTERFACE) {
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "powrprof.lib")
 #define MS 1000
 #define WND_WIDTH 320
@@ -75,13 +71,11 @@ int getATimeout() {
   LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
   if (argc > 1) {
     LPWSTR ts = args[1];
-    if (ts[0] >= '0' && ts[0] <= '9') {
-      int tn = 0;
-      while (*ts) {
-        tn = (tn * 10) + (*ts++ - '0');
-      }
-      return tn * MS;
+    int tn = 0;
+    while (*ts) {
+      tn = (tn * 10) + (*ts++ - '0');
     }
+    return tn * MS;
   }
   return ATIMEOUT_DEFAULT * MS;
 }
@@ -117,10 +111,10 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     atimer.out = getATimeout();
   }
   if (!stime) {
-    stime = timeGetTime();
+    stime = GetTickCount();
   }
 
-  atimer.rest = atimer.out - (timeGetTime() - stime) - 1;
+  atimer.rest = atimer.out - (GetTickCount() - stime) - 1;
   atimer.fixed = atimer.rest / 1000 + 1;
 
   if (atimer.rest <= 0) {

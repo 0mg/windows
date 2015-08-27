@@ -8,10 +8,13 @@ void __start__() {
   ExitProcess(WinMain(0, 0, NULL, 0));
 }
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
-  int len = 0, ms = 0;
-  LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &len);
-  if (len > 1) {
-    ms = _wtoi(args[1]);
+  int argc = 0, ms = 0;
+  LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (argc > 1) {
+    LPWSTR ts = args[1];
+    while (*ts) {
+      ms = (ms * 10) + (*ts++ - '0');
+    }
   }
   SystemParametersInfo(SPI_SETDOUBLECLICKTIME,
     ms ? ms : 200, NULL,
