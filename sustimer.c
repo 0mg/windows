@@ -68,9 +68,9 @@ void setTBProgress(HWND hwnd, int now, int max) {
 
 int getATimeout() {
   int argc;
-  LPWSTR *args = CommandLineToArgvW(GetCommandLineW(), &argc);
+  LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
   if (argc > 1) {
-    LPWSTR ts = args[1];
+    LPWSTR ts = argv[1];
     int tn = 0;
     while (*ts) {
       tn = (tn * 10) + (*ts++ - '0');
@@ -78,11 +78,6 @@ int getATimeout() {
     return tn * MS;
   }
   return ATIMEOUT_DEFAULT * MS;
-}
-
-void quitApp(HWND hwnd) {
-  PostMessage(hwnd, WM_CLOSE, 0, 0);
-  PostQuitMessage(0);
 }
 
 LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -93,8 +88,6 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   static struct {
     int out;
     int rest;
-    int fixed;
-    int fixedPrev;
   } atimer;
 
   static struct {
@@ -106,21 +99,24 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
   } counter, closer, logo, progress, progbar;
 
   static DWORD stime = 0;
+  static BOOL counting = FALSE;
+  static BOOL timeset = FALSE;
 
-  if (!atimer.out) {
+  if (!timeset) {
     atimer.out = getATimeout();
-  }
-  if (!stime) {
-    stime = GetTickCount();
+    atimer.rest = atimer.out;
+    timeset = TRUE;
   }
 
-  atimer.rest = atimer.out - (GetTickCount() - stime) - 1;
-  atimer.fixed = atimer.rest / 1000 + 1;
+  if (counting) {
+    atimer.rest = atimer.out - (GetTickCount() - stime);
+    if (atimer.rest <= 0) {
+      atimeover = TRUE;
+      PostMessage(hwnd, WM_CLOSE, 0, 0);
+    }
+  }
 
-  if (atimer.rest <= 0) {
-    quitApp(hwnd);
-    atimeover = TRUE;
-  } else switch (msg) {
+  switch (msg) {
   case WM_CREATE:
     // window timer
     SetTimer(hwnd, WTIMER_ID, WTIMER_OUT, NULL);
@@ -152,12 +148,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
   case WM_TIMER:
     // repaint
-    if (atimer.fixed != atimer.fixedPrev) {
-      InvalidateRect(hwnd, NULL, TRUE);
-      atimer.fixedPrev = atimer.fixed;
-    } else {
-      InvalidateRect(hwnd, &progvas, TRUE);
-    }
+    InvalidateRect(hwnd, NULL, TRUE);
     return 0;
   case WM_PAINT: {
     PAINTSTRUCT ps;
@@ -170,7 +161,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
       DT_LEFT);
     // count down
     SelectObject(hdc, counter.font);
-    wsprintf(counter.text, TEXT("%d"), atimer.fixed);
+    wsprintf(counter.text, TEXT("%d"), atimer.rest / 1000 + counting);
     DrawText(hdc, counter.text, -1, &canvas,
       DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     // progress frame
@@ -200,10 +191,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     EndPaint(hwnd, &ps);
     setTBProgress(hwnd, atimer.rest, atimer.out);
+    if (!counting) {
+      stime = GetTickCount();
+      counting = TRUE;
+    }
     return 0;
   }
   case WM_DESTROY:
-    quitApp(hwnd);
+    PostQuitMessage(0);
     return 0;
   case WM_MOUSELEAVE:
     hover = FALSE;
@@ -217,14 +212,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     return 0;
   case WM_LBUTTONUP:
-    quitApp(hwnd);
+    PostMessage(hwnd, WM_CLOSE, 0, 0);
     return 0;
   case WM_CHAR:
     switch (wp) {
     case VK_ESCAPE:
     case VK_SPACE:
     case VK_RETURN:
-      quitApp(hwnd);
+      PostMessage(hwnd, WM_CLOSE, 0, 0);
       break;
     }
     return 0;
@@ -270,6 +265,7 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
     DispatchMessage(&msg);
   }
   // Suspend if time over
+  //if (1||atimeover) {TCHAR s[99];wsprintf(s,TEXT("exit code: %d\nsuspend: %d"),msg.wParam,atimeover);MessageBox(NULL,s,s,0);return msg.wParam;}
   if (atimeover) SetSuspendState(FALSE, FALSE, FALSE);
   return msg.wParam;
 }
