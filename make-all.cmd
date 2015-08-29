@@ -1,1 +1,1 @@
-@mingw32-make -f Makefile
+@mingw32-make -B

@@ -3,7 +3,7 @@
 use [gcc](http://gcc.gnu.org/) on command line.
 
 ```
-gcc *.c -mwindows -lpowrprof -lole32 -lwinmm
+gcc *.c -mwindows -lpowrprof -lole32
 ```
 
 ### important options
