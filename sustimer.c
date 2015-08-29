@@ -112,7 +112,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     atimer.rest = atimer.out - (GetTickCount() - stime);
     if (atimer.rest <= 0) {
       atimeover = TRUE;
-      PostMessage(hwnd, WM_CLOSE, 0, 0);
+      SendMessage(hwnd, WM_CLOSE, 0, 0);
     }
   }
 
@@ -191,12 +191,16 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     EndPaint(hwnd, &ps);
     setTBProgress(hwnd, atimer.rest, atimer.out);
-    if (!counting) {
+    if (!stime) {
       stime = GetTickCount();
       counting = TRUE;
     }
     return 0;
   }
+  case WM_CLOSE:
+    counting = FALSE;
+    DestroyWindow(hwnd);
+    return 0;
   case WM_DESTROY:
     PostQuitMessage(0);
     return 0;
@@ -212,14 +216,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     return 0;
   case WM_LBUTTONUP:
-    PostMessage(hwnd, WM_CLOSE, 0, 0);
+    SendMessage(hwnd, WM_CLOSE, 0, 0);
     return 0;
   case WM_CHAR:
     switch (wp) {
     case VK_ESCAPE:
     case VK_SPACE:
     case VK_RETURN:
-      PostMessage(hwnd, WM_CLOSE, 0, 0);
+      SendMessage(hwnd, WM_CLOSE, 0, 0);
       break;
     }
     return 0;
@@ -228,11 +232,12 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 }
 
 int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
-  WNDCLASS wc;
+  WNDCLASSEX wc;
   HWND hwnd;
   MSG msg;
 
   // Main Window: Settings
+  wc.cbSize = sizeof(WNDCLASSEX);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = MainWindowProc;
   wc.cbClsExtra = 0;
@@ -245,11 +250,12 @@ int WINAPI WinMain(HINSTANCE hi, HINSTANCE hp, LPSTR cl, int cs) {
   wc.hbrBackground = CreateSolidBrush(WND_BG);
   wc.lpszMenuName = NULL;
   wc.lpszClassName = TEXT("Suspend PC Timer Window Class");
-
+  wc.hIconSm =
+    (HICON)LoadImage(NULL, IDI_APPLICATION, IMAGE_ICON, 16, 16, LR_SHARED);
   // Main Window: Create, Show
   hwnd = CreateWindowEx(
     WS_EX_TOPMOST,
-    (LPCTSTR)MAKELONG(RegisterClass(&wc), 0), TEXT("Suspend PC Timer"),
+    (LPCTSTR)MAKELONG(RegisterClassEx(&wc), 0), TEXT("Suspend PC Timer"),
     WS_VISIBLE | WS_SYSMENU,
     GetSystemMetrics(SM_CXSCREEN) / 2 - WND_WIDTH / 2,
     GetSystemMetrics(SM_CYSCREEN) / 2 - WND_HEIGHT / 2,
