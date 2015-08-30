@@ -3,7 +3,13 @@
 use [gcc](http://gcc.gnu.org/) on command line.
 
 ```
-gcc *.c -mwindows -lpowrprof -lole32
+mingw32-make
+```
+
+or
+
+```
+gcc *.c -mwindows -lole32 -lpowrprof
 ```
 
 ### important options
@@ -16,7 +22,7 @@ gcc *.c -mwindows -lpowrprof -lole32
 
 * `-DUNICODE` for utf-8 source code.
 * `-s` to decrease file size.
-* `-nostartfiles` to make tiny file. (but it may not work well)
+* `-nostartfiles` to make more tiny. (but it may not work well)
 
 ## without compile
 
@@ -27,5 +33,12 @@ gcc *.c -mwindows -lpowrprof -lole32
 
 ### Visual Studio
 
-* normal: `cl *.c /MD`
-* tiny: `cl *.c /MD /link /ENTRY:__start__`
+```
+nmake
+```
+
+or
+
+```
+cl *.c /MD /link /ENTRY:__start__ kernel32.lib shell32.lib user32.lib gdi32.lib ole32.lib powrprof.lib
+```
