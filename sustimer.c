@@ -17,12 +17,6 @@ DECLARE_INTERFACE(INTERFACE) {
   STDMETHOD(SetProgressValue)(THIS_ HWND, ULONGLONG, ULONGLONG);
 };
 #undef INTERFACE
-#pragma comment(lib, "kernel32.lib")
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "gdi32.lib")
-#pragma comment(lib, "shell32.lib")
-#pragma comment(lib, "ole32.lib")
-#pragma comment(lib, "powrprof.lib")
 #define MS 1000
 #define WND_WIDTH 320
 #define WND_HEIGHT 240

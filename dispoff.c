@@ -1,6 +1,4 @@
 #define UNICODE
-#pragma comment(lib, "user32.lib")
-#pragma comment(lib, "kernel32.lib")
 #include <windows.h>
 void __start__() {
   // program will start from here if `gcc -nostartfiles`
