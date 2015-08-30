@@ -106,7 +106,7 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     atimer.rest = atimer.out - (GetTickCount() - stime);
     if (atimer.rest <= 0) {
       atimeover = TRUE;
-      SendMessage(hwnd, WM_CLOSE, 0, 0);
+      PostMessage(hwnd, WM_CLOSE, 0, 0);
     }
   }
 
@@ -210,14 +210,14 @@ LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
     return 0;
   case WM_LBUTTONUP:
-    SendMessage(hwnd, WM_CLOSE, 0, 0);
+    PostMessage(hwnd, WM_CLOSE, 0, 0);
     return 0;
   case WM_CHAR:
     switch (wp) {
     case VK_ESCAPE:
     case VK_SPACE:
     case VK_RETURN:
-      SendMessage(hwnd, WM_CLOSE, 0, 0);
+      PostMessage(hwnd, WM_CLOSE, 0, 0);
       break;
     }
     return 0;
