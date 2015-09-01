@@ -15,7 +15,7 @@ CFLAGS = $(GCCFLAGS) $(VCFLAGS)
 
 # main
 .PHONY: all clean
-all: dblckspd.exe dispoff.exe suspend.exe sustimer.exe
+all: dblckspd.exe dispoff.exe suspend.exe
 
 .SUFFIXES: .c .exe
 

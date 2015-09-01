@@ -1,3 +1,23 @@
+## this software is
+
+simple applications for Windows.
+
+* **dblckspd**
+
+change mouse-DoubleClickSpeed to 200ms. command `dblckspd.exe 400` to 400ms.
+
+* **dispoff**
+
+turn PC display off.
+
+* **suspend**
+
+suspend PC.
+
+### and
+
+**sustimer** has gone to [other project](https://github.com/0mg/sustimer).
+
 ## how to compile
 
 use [gcc](http://gcc.gnu.org/) on command line.
